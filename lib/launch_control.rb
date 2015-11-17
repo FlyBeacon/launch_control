@@ -17,6 +17,9 @@ module LaunchControl
                   :reply_to, :subject, :merge_vars
 
     def initialize(template_id, options)
+
+      raise 'Please configure your Mandrill API key before trying to deliver emails.' if LaunchControl.configuration.mandrill_api_key.nil?
+
       @template_id = template_id
       @to          = options.delete(:to)
       @cc          = options.delete(:cc)
@@ -124,7 +127,7 @@ module LaunchControl
     attr_accessor :mandrill_api_key
 
     def initialize
-      @mandrill_api_key = ''
+      @mandrill_api_key = nil
     end
   end
 
