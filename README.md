@@ -1,8 +1,6 @@
 # LaunchControl
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/launch_control`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+LaunchControl eases and helps improve the integrity of mail delivered via Mandrill templates.
 
 ## Installation
 
@@ -20,9 +18,26 @@ Or install it yourself as:
 
     $ gem install launch_control
 
+Within your application (for a Rails app, typically /config/initializers/launch_control.rb), setup your Mandrill API key you wish to use:
+
+    LaunchControl.configure do |config|
+      config.mandrill_api_key = 'your_key_here'
+    end
+
 ## Usage
 
-TODO: Write usage instructions here
+    LaunchControl::Mailer.new('mandrill-template-id',
+      to:        @booking.email,
+      from:     'no-reply@test.com',
+      subject:  'Hi Mum!',
+      template_variable_one: 'Howdy!',
+      template_collection: [
+        { one: 'two'   },
+        { two: 'three' }
+      ]
+    ).deliver
+
+    # TODO: Contract validation to come soon.
 
 ## Development
 
