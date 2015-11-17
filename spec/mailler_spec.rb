@@ -4,6 +4,12 @@ module LaunchControl
 
   describe Mailer do
 
+    before(:all) do
+      LaunchControl.configure do |config|
+        config.mandrill_api_key = 'fake'
+      end
+    end
+
     context 'basic behavioural tests' do
       it 'sets a template id' do
         expect(Mailer.new('123', {}).template_id).to eq('123')
@@ -30,7 +36,7 @@ module LaunchControl
       end
     end
 
-    describe 'merge vars construction' do
+    describe '#build_merge_vars' do
 
       subject { Mailer.new('123', test_var: 'Hello') }
 
@@ -39,38 +45,38 @@ module LaunchControl
       end
     end
 
-    describe 'to address construction' do
+    describe '#build_addresses' do
       context 'single :to address' do
         subject { Mailer.new('123', to: 'me@hello.com') }
 
-        it 'correctly builds merge vars' do
-          expect(subject.send(:build_to)).to eq [{ 'email' => 'me@hello.com', 'type' => 'to' }]
+        it 'creates correct email address structure for Mandrill' do
+          expect(subject.send(:build_addresses)).to eq [{ 'email' => 'me@hello.com', 'type' => 'to' }]
         end
       end
 
       context 'multiple :to addresses' do
         subject { Mailer.new('123', to: ['me@hello.com', 'you@hello.com']) }
 
-        it 'correctly builds merge vars' do
-          expect(subject.send(:build_to)).to eq [{"email"=>"me@hello.com", "type"=>"to"},
-                                                 {"email"=>"you@hello.com", "type"=>"to"}]
+        it 'handles multiple :to addresses' do
+          expect(subject.send(:build_addresses)).to eq [{"email"=>"me@hello.com", "type"=>"to"},
+                                                        {"email"=>"you@hello.com", "type"=>"to"}]
         end
       end
 
-      context ':cc and :bcc supplied' do
+      context 'muiltiple :cc and :bcc addresses' do
         subject { Mailer.new('123', cc: ['me@hello.com', 'you@hello.com'], bcc: 'test@test.com') }
 
-        it 'correctly adds the sending addresses' do
+        it 'handles :cc and :bcc addresses' do
           expect(subject.send(:build_addresses)).to eq [{"email"=>"me@hello.com", "type"=>"cc"},
                                                         {"email"=>"you@hello.com", "type"=>"cc"},
                                                         {"email"=>"test@test.com", "type"=>"bcc"}]
         end
       end
 
-      context 'hash email & name supplied' do
+      context ':to address supplied as hash with name' do
         subject { Mailer.new('123', to: { email: 'me@hello.com', name: 'Tester' }) }
 
-        it 'correctly builds merge vars' do
+        it 'correctly maps email & name hashes' do
           expect(subject.send(:build_addresses)).to eq [{"email"=>"me@hello.com", "type"=>"to", "name" => "Tester"}]
         end
       end
