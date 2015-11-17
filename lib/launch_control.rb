@@ -6,10 +6,13 @@ require 'pry'
 module LaunchControl
 
   #
-  # Use as following:
+  # Use as so:
   #
-  #     LaunchControl::Mailer.new('template-id', to: 'xyz', subject: 'Test')
+  #     LaunchControl::Mailer.new('template-id', to: 'xyz', subject: 'Test').deliver
   #
+  # Define global merge vars to integrate with your Mandrill template:
+  #
+  #     LaunchControl::Mailer.new('template-id', to: 'xyz', subject: 'Test', var1: 'Display Me').deliver
   #
   class Mailer
 
@@ -37,7 +40,6 @@ module LaunchControl
 
     def deliver
       if valid?
-        puts message
         mandrill.messages.send_template(@template_id, [], message, false)
       end
     end
@@ -67,9 +69,16 @@ module LaunchControl
       end
 
       #
-      # Defines build_to, build_cc & build_bcc methods, allowing
-      # either singular or array collection of strings or hashes
-      # defining :email and :name for delivery.
+      # Defines build_to, build_cc & build_bcc methods.
+      #
+      # These can accept either singular or array collections
+      # of Strings or Hashes.
+      #
+      # Some examples of possible to, cc & bcc values:
+      #
+      #     'test@test.com'
+      #     { email: 'test@test.com', name: 'Test' }
+      #     ['test@test.com', 'another@email.com']
       #
       [:to, :cc, :bcc].each do |i|
         define_method("build_#{i}") do |address=nil|
@@ -87,6 +96,7 @@ module LaunchControl
         end
       end
 
+
       def build_merge_vars
         unless @merge_vars.empty?
           @merge_vars.collect { |key, value| { 'name' => key.to_s, 'content' => value } }
@@ -95,6 +105,9 @@ module LaunchControl
         end
       end
 
+      #
+      # TODO: Allow a contract to be defined
+      #
       def validate_merge_vars_against_contract
         true
       end
