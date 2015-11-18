@@ -2,6 +2,8 @@ require "launch_control/version"
 require "launch_control/mandrill_contract"
 require 'mandrill'
 require 'pry'
+require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/object/blank'
 
 module LaunchControl
 
