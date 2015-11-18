@@ -41,7 +41,7 @@ To start using Launch Control, you first need to create a contract class:
       end
     end
 
-Here we define which Mandrill template id we are going to use, and which global merge variables we require to use this template safely. Validations use the (Hash Validator)[https://github.com/jamesbrooks/hash_validator] gem, check it out for an idea of what's possible.
+Here we define which Mandrill template id we are going to use, and which global merge variables we require to use this template safely. Validations use the [Hash Validator](https://github.com/jamesbrooks/hash_validator) gem, check it out for an idea of what's possible.
 
 Now to send an email, we can use our MandrillContract subclass and simply push in all the details required as a hash:
 
