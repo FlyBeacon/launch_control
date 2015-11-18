@@ -12,6 +12,9 @@ describe LaunchControl do
     end
   end
 
+  class NoTemplateContract < LaunchControl::MandrillContract
+  end
+
   class SimpleContract < LaunchControl::MandrillContract
     def template
       'template-id'
@@ -105,6 +108,16 @@ describe LaunchControl do
       it 'should supply an error message' do
         subject.deliver(failing_hash)
         expect(subject.errors).to eq({ yolos: "is not valid" })
+      end
+
+    end
+
+    context 'given a NoTemplateContract' do
+
+      subject { NoTemplateContract.new }
+
+      it 'should not deliver when parameters are invalid' do
+        expect { subject.deliver(to: 'test', subject: 'test') }.to raise_error(RuntimeError)
       end
 
     end
