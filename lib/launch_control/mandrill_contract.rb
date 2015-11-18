@@ -1,29 +1,61 @@
 module LaunchControl
 
   require 'reform'
-  require "reform/form/active_model/validations"
+  require 'reform/form/active_model/validations'
+  require 'active_support/concern'
+
   Reform::Form.class_eval do
     include Reform::Form::ActiveModel::Validations
   end
 
-  class MandrillContract < Reform::Form
+  class NullValidate
+    def method_missing(action,*params,&block)
+      true
+    end
+  end
+
+  class BaseContract < Reform::Form
 
     include Reform::Form::ActiveModel
 
+    #
+    # As we want the benefits of Reform for testing
+    # the validity of the params hash, but don't have
+    # underlying objects that we're actually writing to,
+    # we're supplying a NullValidate object to satisfy
+    # Reform & automatically setting all properties to
+    # virtual by default.
+    #
+    def self.property(name, options={}, &block)
+      options = { virtual: true, writable: false }.merge(options)
+      super
+    end
+
+    def initialize(options={})
+      @fields = {}
+      @model  = NullValidate.new
+      @mapper = mapper_for(@model) # mapper for model.
+
+      setup_properties!(options)
+    end
+
+  end
+
+  class MandrillContract < BaseContract
+
     property  :to
-    validates :to, presence: true
+    property  :subject
+    validates :to, :subject, presence: true
 
     def template
       raise 'You must define a Mandrill template to use'
     end
 
-  end
-
-  class NullValidate
-    def method_missing(action,*params,&block)
-      puts action
-      true
+    def deliver(options)
+      launch = LaunchControl::Mailer.new(template, options)
+      validate(options) && launch.valid? && launch.deliver
     end
+
   end
 
   #
@@ -34,21 +66,21 @@ module LaunchControl
   #
   #    NullContract.new('template-name')
   #
-  class NullContract
+  # class NullContract
 
-    attr_reader :template
+  #   attr_reader :template
 
-    def initialize(template)
-      @template = template
-    end
+  #   def initialize(template)
+  #     @template = template
+  #   end
 
-    def validate?
-      true
-    end
+  #   def validate?
+  #     true
+  #   end
 
-    def deliver
-      true
-    end
+  #   def deliver
+  #     true
+  #   end
 
-  end
+  # end
 end

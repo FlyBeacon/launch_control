@@ -20,6 +20,7 @@ module LaunchControl
                   :reply_to, :subject, :merge_vars
 
     def initialize(template_id, options)
+      options = options.dup
 
       raise 'Please configure your Mandrill API key before trying to deliver emails.' if LaunchControl.configuration.mandrill_api_key.nil?
 
@@ -40,7 +41,8 @@ module LaunchControl
 
     def deliver
       if valid?
-        mandrill.messages.send_template(@template_id, [], message, false)
+        response = mandrill.messages.send_template(@template_id, [], message, false)
+        response[0]["status"] == "sent"
       end
     end
 
@@ -113,7 +115,6 @@ module LaunchControl
       end
 
   end
-
 
   #
   # Allow external configuration of Mandrill API Key &
