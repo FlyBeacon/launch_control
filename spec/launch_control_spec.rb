@@ -123,7 +123,7 @@ describe LaunchControl do
       subject { SimpleContract.new }
 
       it 'should deliver when supplied correct parameters' do
-        expect { subject.deliver(to: 'me@test.com', subject: 'Test') }.to raise_error
+        expect { subject.deliver(to: 'me@test.com', subject: 'Test') }.to raise_error(Mandrill::Error)
       end
 
     end

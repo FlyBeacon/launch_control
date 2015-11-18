@@ -26,18 +26,35 @@ Within your application (for a Rails app, typically /config/initializers/launch_
 
 ## Usage
 
-    LaunchControl::Mailer.new('mandrill-template-id',
-      to:        @booking.email,
-      from:     'no-reply@test.com',
-      subject:  'Hi Mum!',
-      template_variable_one: 'Howdy!',
-      template_collection: [
-        { one: 'two'   },
-        { two: 'three' }
-      ]
-    ).deliver
+To start using Launch Control, you first need to create a contract class, i.e.:
 
-    # TODO: Contract validation to come soon.
+    class ThankyouEmail < LaunchControl::MandrillContract
+
+     def template
+       'thank-you'
+     end
+
+     def validations
+       {
+         first_name: 'string',
+         last_name:  'string'
+       }
+     end
+    end
+
+Define global merge vars to integrate with your Mandrill template:
+
+    mailer = ThankyouEmail.new
+    mailer.deliver(to: 'team@lotus.com', subject: 'Bring it home safely', first_name: 'Pastor'ast_name: 'Maldonado')
+       => true
+
+Now if you try and deliver this without the appropriate content, you'll be pulled up on it:
+
+    mailer.deliver(to: 'team@ferarri.com', subject: 'I know what I\'m doing', first_name: 'Kimi')
+      => false
+
+    mailer.errors
+      => {:last_name=>"string required"}
 
 ## Development
 

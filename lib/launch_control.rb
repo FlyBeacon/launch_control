@@ -8,13 +8,35 @@ require 'active_support/core_ext/object/blank'
 module LaunchControl
 
   #
-  # Use as so:
+  # To start using Launch Control, you first need to create a contract class, i.e.:
   #
-  #     LaunchControl::Mailer.new('template-id', to: 'xyz', subject: 'Test').deliver
+  #     class ThankyouEmail < LaunchControl::MandrillContract
+  #
+  #       def template
+  #         'thank-you'
+  #       end
+  #
+  #       def validations
+  #         {
+  #           first_name: 'string',
+  #           last_name:  'string'
+  #         }
+  #       end
+  #     end
   #
   # Define global merge vars to integrate with your Mandrill template:
   #
-  #     LaunchControl::Mailer.new('template-id', to: 'xyz', subject: 'Test', var1: 'Display Me').deliver
+  #     mailer = ThankyouEmail.new
+  #     mailer.deliver(to: 'team@lotus.com', subject: 'Bring it home safely', first_name: 'Pastor', last_name: 'Maldonado')
+  #      => true
+  #
+  # Now if you try and deliver this without the appropriate content, you'll be pulled up on it:
+  #
+  #     mailer.deliver(to: 'team@ferarri.com', subject: 'I know what I\'m doing', first_name: 'Kimi')
+  #      => false
+  #     mailer.errors
+  #      => {:last_name=>"string required"}
+  #
   #
   class Mailer
 
@@ -49,7 +71,7 @@ module LaunchControl
     end
 
     def valid?
-      !!(@to && @subject && @template_id && validate_merge_vars_against_contract)
+      !!(@to && @subject && @template_id)
     end
 
     private
@@ -107,13 +129,6 @@ module LaunchControl
         else
           []
         end
-      end
-
-      #
-      # TODO: Allow a contract to be defined
-      #
-      def validate_merge_vars_against_contract
-        true
       end
 
   end
