@@ -26,7 +26,7 @@ Within your application (for a Rails app, typically /config/initializers/launch_
 
 ## Usage
 
-To start using Launch Control, you first need to create a contract class, i.e.:
+To start using Launch Control, you first need to create a contract class:
 
     class ThankyouEmail < LaunchControl::MandrillContract
       def template
@@ -41,7 +41,9 @@ To start using Launch Control, you first need to create a contract class, i.e.:
       end
     end
 
-Define global merge vars to integrate with your Mandrill template:
+Here we define which Mandrill template id we are going to use, and which global merge variables we require to use this template safely. Validations use the (Hash Validator)[https://github.com/jamesbrooks/hash_validator] gem, check it out for an idea of what's possible.
+
+Now to send an email, we can use our MandrillContract subclass and simply push in all the details required as a hash:
 
     mailer = ThankyouEmail.new
     mailer.deliver(to: 'team@lotus.com', subject: 'Bring it home safely', first_name: 'Pastor', last_name: 'Maldonado')
