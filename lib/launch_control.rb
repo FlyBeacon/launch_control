@@ -56,6 +56,7 @@ module LaunchControl
       @from_email  = options.delete(:from_email)
       @reply_to    = options.delete(:reply_to)
       @subject     = options.delete(:subject)
+      @attachments = options.delete(:attachments) || []
       @merge_vars  = options
     end
 
@@ -86,7 +87,8 @@ module LaunchControl
           "subject"           => @subject,
           "from_name"         => @from_name,
           "from_email"        => @from_email,
-          "global_merge_vars" => build_merge_vars
+          "global_merge_vars" => build_merge_vars,
+          "attachments"       => build_attachments
         }
       end
 
@@ -127,7 +129,27 @@ module LaunchControl
         unless @merge_vars.empty?
           @merge_vars.collect { |key, value| { 'name' => key.to_s, 'content' => value } }
         else
+
+      #
+      # Expects an array of hashes containing the
+      # attachment details.
+      #
+      # i.e.
+      #
+      #     [{ type: 'text/plain', 'name': 'test.txt', content: '1234' }]
+      #
+      def build_attachments
+        if @attachments.empty?
           []
+        else
+          @attachments.collect do |attachment|
+            next unless attachment.class == Hash
+            {
+              'type'    => attachment[:type],
+              'name'    => attachment[:name],
+              'content' => attachment[:content]
+            }
+          end
         end
       end
 
