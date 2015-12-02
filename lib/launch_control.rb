@@ -126,9 +126,12 @@ module LaunchControl
 
 
       def build_merge_vars
-        unless @merge_vars.empty?
-          @merge_vars.collect { |key, value| { 'name' => key.to_s, 'content' => value } }
+        if @merge_vars.empty?
+          []
         else
+          @merge_vars.collect { |key, value| { 'name' => key.to_s, 'content' => value } }
+        end
+      end
 
       #
       # Expects an array of hashes containing the
