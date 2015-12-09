@@ -57,7 +57,7 @@ describe LaunchControl do
       stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send-template.json").
         to_return(status: 200, body: '[{ "email": "recipient.email@example.com",
                                          "status": "sent",
-                                         "reject_reason": "hard-bounce",
+                                         "reject_reason": "none",
                                          "_id": "abc123abc123abc123abc123abc123"
                                        }]', headers: {})
     end

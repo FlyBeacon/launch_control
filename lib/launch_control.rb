@@ -1,9 +1,9 @@
 require "launch_control/version"
 require "launch_control/mandrill_contract"
 require 'mandrill'
-require 'pry'
 require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/object/blank'
+require 'base64'
 
 module LaunchControl
 
@@ -134,12 +134,14 @@ module LaunchControl
       end
 
       #
-      # Expects an array of hashes containing the
-      # attachment details.
+      # Expects an array of hashes containing the attachment details.
       #
       # i.e.
       #
       #     [{ type: 'text/plain', 'name': 'test.txt', content: '1234' }]
+      #
+      # Type is the mime type of the file.
+      # Content is the content of the file, preferably in UTF-8 encoding.
       #
       def build_attachments
         if @attachments.empty?
@@ -150,7 +152,7 @@ module LaunchControl
             {
               'type'    => attachment[:type],
               'name'    => attachment[:name],
-              'content' => attachment[:content]
+              'content' => Base64.encode64(attachment[:content])
             }
           end
         end
