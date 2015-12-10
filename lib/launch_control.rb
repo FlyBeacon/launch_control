@@ -41,7 +41,7 @@ module LaunchControl
   class Mailer
 
     attr_accessor :template_id, :cc, :bcc, :to, :from_name, :from_email,
-                  :reply_to, :subject, :merge_vars
+                  :reply_to, :subject, :merge_vars, :status
 
     def initialize(template_id, options)
       options = options.dup
@@ -67,7 +67,8 @@ module LaunchControl
     def deliver
       if valid?
         response = mandrill.messages.send_template(@template_id, [], message, false)
-        response[0]["status"] == "sent"
+        @status = response[0]["status"]
+        ["sent", "queued", "scheduled"].include?(@status)
       end
     end
 
