@@ -1,4 +1,5 @@
 module LaunchControl
+  class ContractFailure < StandardError; end
 
   require 'hash_validator'
 
@@ -41,11 +42,16 @@ module LaunchControl
       options
     end
 
-
-    def deliver(options)
+    def deliver!(options)
       options = merged_options(options)
       launch = LaunchControl::Mailer.new(template, options)
+      raise ContractFailure.new(error_string) unless valid?(options) && launch.valid?
       valid?(options) && launch.valid? && launch.deliver
+    end
+
+    def deliver(options)
+      ActiveSupport::Deprecation.warn('deliver is deprecated. Use deliver! instead.')
+      deliver!(options)
     end
 
     def default_email_contract
@@ -65,6 +71,10 @@ module LaunchControl
       end
     end
 
+    def error_string
+      (@errors || {}).map { |(attr, message)|
+        "#{attr} #{message}"
+      }.join(', ')
+    end
   end
-
 end

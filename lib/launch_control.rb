@@ -1,9 +1,9 @@
 require "launch_control/version"
 require "launch_control/mandrill_contract"
 require 'mandrill'
-require 'pry'
 require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/object/blank'
+require 'base64'
 
 module LaunchControl
 
@@ -41,7 +41,7 @@ module LaunchControl
   class Mailer
 
     attr_accessor :template_id, :cc, :bcc, :to, :from_name, :from_email,
-                  :reply_to, :subject, :merge_vars
+                  :reply_to, :subject, :merge_vars, :status
 
     def initialize(template_id, options)
       options = options.dup
@@ -56,6 +56,7 @@ module LaunchControl
       @from_email  = options.delete(:from_email)
       @reply_to    = options.delete(:reply_to)
       @subject     = options.delete(:subject)
+      @attachments = options.delete(:attachments) || []
       @merge_vars  = options
     end
 
@@ -66,7 +67,8 @@ module LaunchControl
     def deliver
       if valid?
         response = mandrill.messages.send_template(@template_id, [], message, false)
-        response[0]["status"] == "sent"
+        @status = response[0]["status"]
+        ["sent", "queued", "scheduled"].include?(@status)
       end
     end
 
@@ -86,7 +88,8 @@ module LaunchControl
           "subject"           => @subject,
           "from_name"         => @from_name,
           "from_email"        => @from_email,
-          "global_merge_vars" => build_merge_vars
+          "global_merge_vars" => build_merge_vars,
+          "attachments"       => build_attachments
         }
       end
 
@@ -124,10 +127,35 @@ module LaunchControl
 
 
       def build_merge_vars
-        unless @merge_vars.empty?
-          @merge_vars.collect { |key, value| { 'name' => key.to_s, 'content' => value } }
-        else
+        if @merge_vars.empty?
           []
+        else
+          @merge_vars.collect { |key, value| { 'name' => key.to_s, 'content' => value } }
+        end
+      end
+
+      #
+      # Expects an array of hashes containing the attachment details.
+      #
+      # i.e.
+      #
+      #     [{ type: 'text/plain', 'name': 'test.txt', content: '1234' }]
+      #
+      # Type is the mime type of the file.
+      # Content is the content of the file, preferably in UTF-8 encoding.
+      #
+      def build_attachments
+        if @attachments.empty?
+          []
+        else
+          @attachments.collect do |attachment|
+            next unless attachment.class == Hash
+            {
+              'type'    => attachment[:type],
+              'name'    => attachment[:name],
+              'content' => Base64.encode64(attachment[:content])
+            }
+          end
         end
       end
 
@@ -149,11 +177,6 @@ module LaunchControl
     attr_accessor :configuration
   end
 
-  def self.configure
-    self.configuration ||= Configuration.new
-    yield(configuration)
-  end
-
   class Configuration
     attr_accessor :mandrill_api_key
 
@@ -162,4 +185,11 @@ module LaunchControl
     end
   end
 
+  def self.configure
+    self.configuration ||= Configuration.new
+    yield(configuration) if block_given?
+  end
+
+  # Ensure default config
+  configure
 end

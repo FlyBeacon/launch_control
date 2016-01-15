@@ -37,7 +37,6 @@ module LaunchControl
     end
 
     describe '#build_merge_vars' do
-
       subject { Mailer.new('123', test_var: 'Hello') }
 
       it 'correctly builds merge vars' do
@@ -79,6 +78,15 @@ module LaunchControl
         it 'correctly maps email & name hashes' do
           expect(subject.send(:build_addresses)).to eq [{"email"=>"me@hello.com", "type"=>"to", "name" => "Tester"}]
         end
+      end
+    end
+
+    describe '#build_attachments' do
+      subject { Mailer.new('123', attachments: [{ name: 'Hello.png', type: 'application/pdf', content: '1234' }]) }
+
+      it 'correctly builds attachments' do
+        expect(subject.send(:build_attachments)).to eq [{ 'type' => 'application/pdf', 'name' => 'Hello.png', 'content' => "MTIzNA==\n" }]
+        expect(Base64.decode64(subject.send(:build_attachments)[0]['content'])).to eq '1234'
       end
     end
 
