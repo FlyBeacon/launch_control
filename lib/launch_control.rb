@@ -73,7 +73,7 @@ module LaunchControl
     end
 
     def valid?
-      !!(@to && @subject && @template_id)
+      !!(@to && @template_id)
     end
 
     private

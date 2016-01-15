@@ -4,6 +4,7 @@ SimpleCov.start
 
 require 'launch_control'
 require 'webmock/rspec'
+require 'byebug'
 WebMock.disable_net_connect!(allow_localhost: true)
 
 LaunchControl.configure do |config|
