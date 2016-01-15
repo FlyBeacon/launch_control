@@ -177,11 +177,6 @@ module LaunchControl
     attr_accessor :configuration
   end
 
-  def self.configure
-    self.configuration ||= Configuration.new
-    yield(configuration)
-  end
-
   class Configuration
     attr_accessor :mandrill_api_key
 
@@ -190,4 +185,11 @@ module LaunchControl
     end
   end
 
+  def self.configure
+    self.configuration ||= Configuration.new
+    yield(configuration) if block_given?
+  end
+
+  # Ensure default config
+  configure
 end

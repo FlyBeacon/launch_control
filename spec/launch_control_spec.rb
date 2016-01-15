@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe LaunchControl do
+RSpec.describe LaunchControl do
 
   it 'has a version number' do
     expect(LaunchControl::VERSION).not_to be nil
@@ -53,7 +53,7 @@ describe LaunchControl do
 
   context 'successful mandrill interactions' do
 
-    before(:each) do
+    before do
       stub_request(:post, "https://mandrillapp.com/api/1.0/messages/send-template.json").
         to_return(status: 200, body: '[{ "email": "recipient.email@example.com",
                                          "status": "sent",
@@ -66,12 +66,12 @@ describe LaunchControl do
 
       subject { SimpleContract.new }
 
-      it 'should deliver when supplied correct parameters' do
-        expect(subject.deliver(to: 'me@test.com', subject: 'Test', var: '123')).to be true
+      it 'delivers when supplied correct parameters' do
+        expect(subject.deliver!(to: 'me@test.com', subject: 'Test', var: '123')).to be true
       end
 
-      it 'should not deliver when parameters are invalid' do
-        expect(subject.deliver(to: 'me@test.com', var: '123')).to be false
+      it 'does not deliver when parameters are invalid' do
+        expect { subject.deliver!(to: 'me@test.com', var: '123') }.to raise_error(LaunchControl::ContractFailure)
       end
 
     end
@@ -80,14 +80,13 @@ describe LaunchControl do
 
       subject { ComplexContract.new }
 
-      it 'should deliver when supplied correct parameters' do
-        expect(subject.deliver(to: 'me@test.com', subject: 'Test', yolo: '123')).to be true
+      it 'delivers when supplied correct parameters' do
+        expect(subject.deliver!(to: 'me@test.com', subject: 'Test', yolo: '123')).to be true
       end
 
-      it 'should not deliver when parameters are invalid' do
-        expect(subject.deliver(to: 'me@test.com', subject: 'Test', var: '123')).to be false
+      it 'does not deliver when parameters are invalid' do
+        expect { subject.deliver!(to: 'me@test.com', subject: 'Test', var: '123') }.to raise_error(LaunchControl::ContractFailure)
       end
-
     end
 
 
@@ -95,33 +94,29 @@ describe LaunchControl do
 
       subject { NestedContract.new }
 
-      it 'should deliver when supplied correct parameters' do
-        expect(subject.deliver(to: 'me@test.com', subject: 'Test', yolos: [{ one: '123'}])).to be true
+      it 'delivers when supplied correct parameters' do
+        expect(subject.deliver!(to: 'me@test.com', subject: 'Test', yolos: [{ one: '123'}])).to be true
       end
 
       let(:failing_hash) { { to: 'me@test.com', subject: 'Test', var: '123' } }
 
-      it 'should not deliver when parameters are invalid' do
-        expect(subject.deliver(failing_hash)).to be false
+      it 'does not deliver when parameters are invalid' do
+        expect { subject.deliver!(failing_hash) }.to raise_error(LaunchControl::ContractFailure)
       end
 
-      it 'should supply an error message' do
-        subject.deliver(failing_hash)
-        expect(subject.errors).to eq({ yolos: "is not valid" })
+      it 'supplies an error message' do
+        expect { subject.deliver!(failing_hash) }.to raise_error(LaunchControl::ContractFailure, 'yolos is not valid')
       end
-
     end
 
     context 'given a NoTemplateContract' do
 
       subject { NoTemplateContract.new }
 
-      it 'should not deliver when parameters are invalid' do
-        expect { subject.deliver(to: 'test', subject: 'test') }.to raise_error(RuntimeError)
+      it 'does not deliver when parameters are invalid' do
+        expect { subject.deliver!(to: 'test', subject: 'test') }.to raise_error(RuntimeError)
       end
-
     end
-
   end
 
   context 'failed mandrill interactions' do
@@ -135,10 +130,9 @@ describe LaunchControl do
 
       subject { SimpleContract.new }
 
-      it 'should deliver when supplied correct parameters' do
-        expect { subject.deliver(to: 'me@test.com', subject: 'Test') }.to raise_error(Mandrill::Error)
+      it 'delivers when supplied correct parameters' do
+        expect { subject.deliver!(to: 'me@test.com', subject: 'Test') }.to raise_error(Mandrill::Error)
       end
-
     end
   end
 
