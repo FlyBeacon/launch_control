@@ -38,15 +38,18 @@ module LaunchControl
       default_email_contract.merge!(validations)
     end
 
-    def merged_options(options)
-      options
+    def defaults
+      {}
     end
 
-    def deliver!(options)
-      options = merged_options(options)
-      launch = LaunchControl::Mailer.new(template, options)
+    def merged_options(options)
+      defaults.merge(options)
+    end
+
+    def deliver!(options = {})
+      launch = LaunchControl::Mailer.new(template, merged_options(options))
       raise ContractFailure.new(error_string) unless valid?(options) && launch.valid?
-      valid?(options) && launch.valid? && launch.deliver
+      launch.deliver
     end
 
     def deliver(options)
@@ -55,14 +58,15 @@ module LaunchControl
     end
 
     def default_email_contract
+      # Note that subject is not required as it can be set in Mandrill
       {
-        to:      lambda { |to| [Array,String,Hash].include?(to.class) },
-        subject: 'string'
+        to: lambda { |to| [Array,String,Hash].include?(to.class) && to.present? }
       }
     end
 
-    def valid?(options)
-      validator = HashValidator.validate(options, merged_contract)
+    def valid?(options = {})
+      merged_options = merged_options(options)
+      validator = HashValidator.validate(merged_options, merged_contract)
       if validator.valid?
         true
       else
@@ -75,6 +79,10 @@ module LaunchControl
       (@errors || {}).map { |(attr, message)|
         "#{attr} #{message}"
       }.join(', ')
+    end
+
+    def string_present?
+      lambda { |value| value.class == String && value.present? }
     end
   end
 end
